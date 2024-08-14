@@ -1041,17 +1041,10 @@ static esp_err_t esp_set_atecc608a_pki_context(esp_tls_t *tls, const void *pki)
     (void)esp_ret;
     (void)cert_def;
 #if defined(CONFIG_ATECC608A_TNG) || defined(CONFIG_ATECC608A_TFLEX)
-#ifdef CONFIG_ATECC608A_TNG
     esp_ret = esp_init_atecc608a(CONFIG_ATCA_I2C_ADDRESS);
     if (ret != ESP_OK) {
         return ESP_ERR_ESP_TLS_SE_FAILED;
     }
-#elif CONFIG_ATECC608A_TFLEX /* CONFIG_ATECC608A_TNG */
-    esp_ret = esp_init_atecc608a(CONFIG_ATCA_I2C_ADDRESS);
-    if (ret != ESP_OK) {
-        return ESP_ERR_ESP_TLS_SE_FAILED;
-    }
-#endif /* CONFIG_ATECC608A_TFLEX */
     mbedtls_x509_crt_init(&tls->clientcert);
     ret = tng_get_device_cert_def(&cert_def);
     if (ret != 0) {
