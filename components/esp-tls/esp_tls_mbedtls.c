@@ -1040,12 +1040,14 @@ static esp_err_t esp_set_atecc608a_pki_context(esp_tls_t *tls, const void *pki)
     ESP_LOGI(TAG, "Initialize the ATECC interface...");
     (void)esp_ret;
     (void)cert_def;
-#if defined(CONFIG_ATECC608A_TNG) || defined(CONFIG_ATECC608A_TFLEX)
+
     esp_ret = esp_init_atecc608a(CONFIG_ATCA_I2C_ADDRESS);
     if (ret != ESP_OK) {
         return ESP_ERR_ESP_TLS_SE_FAILED;
     }
     mbedtls_x509_crt_init(&tls->clientcert);
+
+#if defined(CONFIG_ATECC608A_TNG) || defined(CONFIG_ATECC608A_TFLEX)
     ret = tng_get_device_cert_def(&cert_def);
     if (ret != 0) {
         ESP_LOGE(TAG, "Failed to get device cert def");
@@ -1059,33 +1061,7 @@ static esp_err_t esp_set_atecc608a_pki_context(esp_tls_t *tls, const void *pki)
         mbedtls_print_error_msg(ret);
         return ESP_ERR_ESP_TLS_SE_FAILED;
     }
-#elif CONFIG_ATECC608A_TCUSTOM
-    esp_ret = esp_init_atecc608a(CONFIG_ATCA_I2C_ADDRESS);
-    if (ret != ESP_OK) {
-        return ESP_ERR_ESP_TLS_SE_FAILED;
-    }
-    mbedtls_x509_crt_init(&tls->clientcert);
-
-    esp_tls_pki_t *pki_l = (esp_tls_pki_t *) pki;
-    if (pki_l->publiccert_pem_buf != NULL) {
-        ret = mbedtls_x509_crt_parse(&tls->clientcert, pki_l->publiccert_pem_buf, pki_l->publiccert_pem_bytes);
-        if (ret < 0) {
-            ESP_LOGE(TAG, "mbedtls_x509_crt_parse of client cert returned -0x%04X", -ret);
-            mbedtls_print_error_msg(ret);
-            ESP_INT_EVENT_TRACKER_CAPTURE(tls->error_handle, ESP_TLS_ERR_TYPE_MBEDTLS, -ret);
-            return ESP_ERR_MBEDTLS_X509_CRT_PARSE_FAILED;
-        }
-    } else {
-        ESP_LOGE(TAG, "Device certificate must be provided for TrustCustom Certs");
-        return ESP_FAIL;
-    }
-#elif CONFIG_ATECC608A_MANUAL_SELECTION
-    esp_ret = esp_init_atecc608a(106);
-    if (ret != ESP_OK) {
-        return ESP_ERR_ESP_TLS_SE_FAILED;
-    }
-    mbedtls_x509_crt_init(&tls->clientcert);
-
+#elif CONFIG_ATECC608A_TCUSTOM || CONFIG_ATECC608A_MANUAL_SELECTION
     esp_tls_pki_t *pki_l = (esp_tls_pki_t *) pki;
     if (pki_l->publiccert_pem_buf != NULL) {
         ret = mbedtls_x509_crt_parse(&tls->clientcert, pki_l->publiccert_pem_buf, pki_l->publiccert_pem_bytes);
